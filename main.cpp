@@ -43,14 +43,29 @@ void two_equation_model( const state_type &x , state_type &dxdt , const double /
 //]
 
 
+int N = 100;
+std::vector< double > t(N);
+std::vector< double > x_gen(N);
+std::vector< double > y_gen(N);
+
 void generate_simulated_data()
 {
-    int N = 100;
-    std::vector< double > t(N);
+    using namespace boost::numeric::odeint;
+
 
     for (int ii=0; ii<N; ii++) {
         t[ii] = ii;
-        std::cout << "ii: " << ii << std::endl;
+
+        state_type x(2);
+        x[0] = a;
+        x[1] = b;
+
+        size_t steps = integrate( two_equation_model , x , 0.0 , t[ii] , 0.1 );
+
+        std::cout << "ii: " << x[0] << " " << x[1] << std::endl;
+
+        x_gen[ii] = x[0];
+        y_gen[ii] = x[1];
     }
 
 
@@ -83,7 +98,8 @@ int main() {
 
     generate_simulated_data();
 
-    plt::plot({1,3,2,4});
+    plt::plot(t, x_gen);
+    plt::plot(t, y_gen);
     plt::show();
 
 }
