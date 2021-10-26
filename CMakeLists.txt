@@ -10,6 +10,7 @@ endmacro()
 cmake_minimum_required(VERSION 3.20)
 project(twoEquationModel)
 
+
 set(CMAKE_CXX_STANDARD 14)
 set(BOOST_ROOT boost_1_77_0)
 

@@ -62,7 +62,7 @@ class two_eqn_model {
     model_params_t m_params;
 
 public:
-    two_eqn_model( model_params_t params ) : m_params(params) { }
+    explicit two_eqn_model( model_params_t params ) : m_params(params) { }
 
     void operator() ( const state_type &x , state_type &dxdt , const double /* t */ )
     {
