@@ -8,19 +8,7 @@ This repository shows a simple example of using the [boost numerical integration
 
 The system used here for testing is a set of two ODEs and two initial conditions:
 
-<img src="https://latex.codecogs.com/svg.latex?\Large&space;\frac{d}{dt}x(t)=-c \cdot x(t) \cdot y(t) + d" />
-
-<br/>
-
-<img src="https://latex.codecogs.com/svg.latex?\Large&space;\frac{d}{dt}y(t)=c \cdot x(t) \cdot y(t) - e \cdot y(t) + g" />
-
-<br/>
-
-<img src="https://latex.codecogs.com/svg.latex?\Large&space;x(0)=a" />
-
-<br/>
-
-<img src="https://latex.codecogs.com/svg.latex?\Large&space;y(0)=b" />
+![Equations](equations.png)
 
 ## Generating Data from the Model
 

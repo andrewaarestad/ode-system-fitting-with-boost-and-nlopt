@@ -29,7 +29,7 @@ typedef struct {
 } model_params_t;
 
 typedef struct {
-    generated_data_t *truth_data;
+    generated_data_t *measurements;
     int step_count;
 //    plt::Plot plot;
 } objective_function_extra_t;
@@ -50,11 +50,11 @@ typedef std::vector< double > state_type;
 //typedef boost::array< double , 2 > state_type;
 
 /* The rhs of x' = f(x) */
-void two_equation_model( const state_type &x , state_type &dxdt , const double t, model_params_t current_params )
-{
-    dxdt[0] = -current_params.c * x[0] * x[1] + current_params.d;
-    dxdt[1] = current_params.c * x[0] * x[1] - current_params.e * x[1] + current_params.g;
-}
+//void two_equation_model( const state_type &x , state_type &dxdt , const double t, model_params_t current_params )
+//{
+//    dxdt[0] = -current_params.c * x[0] * x[1] + current_params.d;
+//    dxdt[1] = current_params.c * x[0] * x[1] - current_params.e * x[1] + current_params.g;
+//}
 //]
 
 class two_eqn_model {
@@ -86,6 +86,8 @@ void generate_simulated_data(generated_data_t *data, model_params_t params)
         x[1] = params.b;
 
         two_eqn_model model(params);
+
+        // TODO: Make this faster by only doing a single call to `integrate` with an observer to capture intermediate time points. Also fixed step size should be used.
         size_t steps = integrate( model , x , 0.0 , data->t[ii] , 0.1 );
 
 //        std::cout << "ii: " << x[0] << " " << x[1] << std::endl;
@@ -135,8 +137,8 @@ double objective_function(unsigned n, const double *x, double *grad, void *extra
     double residual_x;
     double residual_y;
     for (int ii = 0; ii < current_data.length; ii++) {
-        residual_x = current_data.x[ii] - extra->truth_data->x[ii];
-        residual_y = current_data.y[ii] - extra->truth_data->y[ii];
+        residual_x = current_data.x[ii] - extra->measurements->x[ii];
+        residual_y = current_data.y[ii] - extra->measurements->y[ii];
         sse = sse + residual_x * residual_x;
         sse = sse + residual_y * residual_y;
 //        cout << "residuals: " << residual_x << ", " << residual_y << ", " << truth_data->x[ii] << ", " << truth_data->y[ii] << endl;
@@ -160,6 +162,7 @@ double objective_function(unsigned n, const double *x, double *grad, void *extra
 
 }
 
+// TODO: Make this white gaussian instead of uniform
 double get_random_number()
 {
     return ((float)rand()/RAND_MAX - 0.5) * 50;
@@ -192,11 +195,6 @@ int main() {
     using namespace std;
     using namespace boost::numeric::odeint;
 
-
-    state_type x(2);
-    x[0] = truth_params.a;
-    x[1] = truth_params.b;
-
     generated_data_t truth_data;
     generated_data_t truth_data_with_noise;
     truth_data.length = N;
@@ -211,17 +209,12 @@ int main() {
     inject_noise(&truth_data_with_noise);
 
 
-//    plt::Plot plot = start_plot(&truth_data_with_noise);
-
-
-//    double lb[2] = { -HUGE_VAL, 0 }; /* lower bounds */
     nlopt_opt opt;
 
     opt = nlopt_create(NLOPT_LN_NELDERMEAD, 6); /* algorithm and dimensionality */
-//    nlopt_set_lower_bounds(opt, lb);
 
     objective_function_extra_t extra = {
-            .truth_data = &truth_data_with_noise,
+            .measurements = &truth_data_with_noise,
             .step_count = 0
 //            .plot = plot
     };
@@ -235,11 +228,6 @@ int main() {
     step_sizes[4] = 0.001;
     step_sizes[5] = 0.00001;
     nlopt_set_initial_step(opt, step_sizes);
-
-//    my_constraint_data data[2] = { {2,0}, {-1,1} };
-
-//    nlopt_add_inequality_constraint(opt, myconstraint, &data[0], 1e-8);
-//    nlopt_add_inequality_constraint(opt, myconstraint, &data[1], 1e-8);
 
     nlopt_set_xtol_rel(opt, 1e-6);
 
@@ -278,7 +266,7 @@ int main() {
 
 //    plot_data();
 
-    plt::show();
+//    plt::show();
 
     plot_solution(&truth_data_with_noise, &fitted_solution, &fitted_params);
 
