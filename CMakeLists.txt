@@ -19,10 +19,14 @@ include_directories(${Boost_INCLUDE_DIRS})
 find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
 
+# ASSUMES NLOPT IS INSTALLED in /user/local/include, e.g. with `brew install nlopt`
+include_directories(/usr/local/include)
+
 
 add_executable(twoEquationModel main.cpp)
 add_executable(harmonicExample harmonic_example.cpp)
 
+target_link_libraries(twoEquationModel "/usr/local/lib/libnlopt.dylib")
 target_link_libraries(twoEquationModel ${PYTHON_LIBRARIES})
 
 print_all_variables()
