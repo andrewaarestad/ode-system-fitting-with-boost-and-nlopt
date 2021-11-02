@@ -17,6 +17,10 @@ set(BOOST_ROOT boost_1_77_0)
 find_package(Boost 1.77.0 REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
+#set(ARMA_INCLUDE_PATH vendor/armadillo-10.7.1)
+include_directories(vendor/armadillo-10.7.1/include)
+include_directories(vendor/optim/header_only_version)
+
 find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
 
@@ -30,4 +34,4 @@ add_executable(harmonicExample harmonic_example.cpp)
 target_link_libraries(twoEquationModel "/usr/local/lib/libnlopt.dylib")
 target_link_libraries(twoEquationModel ${PYTHON_LIBRARIES})
 
-print_all_variables()
+#print_all_variables()

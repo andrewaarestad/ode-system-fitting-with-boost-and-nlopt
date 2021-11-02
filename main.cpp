@@ -4,8 +4,11 @@
 
 #include <nlopt.h>
 
-#define WITHOUT_NUMPY
+#define OPTIM_ENABLE_ARMA_WRAPPERS
+//#define ARMA_DONT_USE_WRAPPER
+#include "optim.hpp"
 
+#define WITHOUT_NUMPY
 #include "matplotlibcpp.h"
 namespace plt = matplotlibcpp;
 
