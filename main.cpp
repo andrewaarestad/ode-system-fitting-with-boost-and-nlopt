@@ -2,7 +2,7 @@
 #include <boost/array.hpp>
 #include <boost/numeric/odeint.hpp>
 
-#include <nlopt.h>
+//#include <nlopt.h>
 
 #define OPTIM_ENABLE_ARMA_WRAPPERS
 //#define ARMA_DONT_USE_WRAPPER
@@ -114,7 +114,8 @@ void plot_solution(generated_data_t *measurements, generated_data_t *fitted_solu
     plt::show();
 }
 
-double objective_function(unsigned n, const double *x, double *grad, void *extra_data)
+//double objective_function(unsigned n, const double *x, double *grad, void *extra_data)
+double objective_function(unsigned n, const arma::vec& x, arma::vec* grad_out, void *extra_data)
 {
     using namespace std;
     auto *extra = (objective_function_extra_t *) extra_data;
@@ -165,6 +166,12 @@ double objective_function(unsigned n, const double *x, double *grad, void *extra
 
 }
 
+double objective_function_wrapper(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_data)
+{
+    return objective_function(0, vals_inp, grad_out, opt_data);
+//    return ll_fn_whess(vals_inp,grad_out,nullptr,opt_data);
+}
+
 // TODO: Make this white gaussian instead of uniform
 double get_random_number()
 {
@@ -191,8 +198,6 @@ void copy_generated_data(generated_data_t *source, generated_data_t *dest)
 }
 
 
-
-
 int main() {
 
     using namespace std;
@@ -212,16 +217,33 @@ int main() {
     inject_noise(&truth_data_with_noise);
 
 
-    nlopt_opt opt;
-
-    opt = nlopt_create(NLOPT_LN_NELDERMEAD, 6); /* algorithm and dimensionality */
-
     objective_function_extra_t extra = {
             .measurements = &truth_data_with_noise,
             .step_count = 0
 //            .plot = plot
     };
-    nlopt_set_min_objective(opt, objective_function, &extra);
+
+
+    arma::vec x = arma::ones(6,1); // initial values
+    x[0] = truth_params.a;
+    x[1] = truth_params.b;
+    x[2] = truth_params.c;
+    x[3] = truth_params.d;
+    x[4] = truth_params.e;
+    x[5] = truth_params.g;
+
+    optim::algo_settings_t settings;
+
+    optim::nm(x, objective_function_wrapper, &extra, settings);
+
+
+
+
+//    nlopt_opt opt;
+
+//    opt = nlopt_create(NLOPT_LN_NELDERMEAD, 6); /* algorithm and dimensionality */
+
+//    nlopt_set_min_objective(opt, objective_function, &extra);
 
     double step_sizes[6];
     step_sizes[0] = 1;
@@ -230,27 +252,37 @@ int main() {
     step_sizes[3] = 0.1;
     step_sizes[4] = 0.001;
     step_sizes[5] = 0.00001;
-    nlopt_set_initial_step(opt, step_sizes);
+//    nlopt_set_initial_step(opt, step_sizes);
 
-    nlopt_set_xtol_rel(opt, 1e-6);
+//    nlopt_set_xtol_rel(opt, 1e-6);
 
-    double guesses[6] = { truth_params.a, truth_params.b, truth_params.c, truth_params.d, truth_params.e, truth_params.g };  /* `*`some` `initial` `guess`*` */
+//    double guesses[6] = { truth_params.a, truth_params.b, truth_params.c, truth_params.d, truth_params.e, truth_params.g };  /* `*`some` `initial` `guess`*` */
     double minf; /* `*`the` `minimum` `objective` `value,` `upon` `return`*` */
-    cout << "starting nlopt" << std::endl;
-    if (nlopt_optimize(opt, guesses, &minf) < 0) {
-        printf("nlopt failed!\n");
-        nlopt_destroy(opt);
-        return -1;
-    }
+//    cout << "starting nlopt" << std::endl;
+//    if (nlopt_optimize(opt, guesses, &minf) < 0) {
+//        printf("nlopt failed!\n");
+//        nlopt_destroy(opt);
+//        return -1;
+//    }
 
+//    model_params_t fitted_params = {
+//            .a = guesses[0],
+//            .b = guesses[1],
+//            .c = guesses[2],
+//            .d = guesses[3],
+//            .e = guesses[4],
+//            .g = guesses[5]
+//    };
     model_params_t fitted_params = {
-            .a = guesses[0],
-            .b = guesses[1],
-            .c = guesses[2],
-            .d = guesses[3],
-            .e = guesses[4],
-            .g = guesses[5]
+            .a = x[0],
+            .b = x[1],
+            .c = x[2],
+            .d = x[3],
+            .e = x[4],
+            .g = x[5]
     };
+
+
 
     printf("found minimum at: a:%f, b:%f, c:%f, d:%f, e:%f, g:%f = %0.10g\n", fitted_params.a, fitted_params.b, fitted_params.c, fitted_params.d, fitted_params.e, fitted_params.g, minf);
     printf(" - actual params: a:%f, b:%f, c:%f, d:%f, e:%f, g:%f\n", truth_params.a, truth_params.b, truth_params.c, truth_params.d, truth_params.e, truth_params.g);
@@ -274,7 +306,7 @@ int main() {
     plot_solution(&truth_data_with_noise, &fitted_solution, &fitted_params);
 
 
-    nlopt_destroy(opt);
+//    nlopt_destroy(opt);
 
 
 }
